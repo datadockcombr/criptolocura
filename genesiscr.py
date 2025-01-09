@@ -2,9 +2,16 @@ import hashlib
 import time
 import struct
 
+def compact_to_target(compact):
+    """Converte o valor compactado de dificuldade (nBits) em um target real."""
+    exponent = (compact >> 24) & 0xFF
+    mantissa = compact & 0xFFFFFF
+    target = mantissa * (1 << (8 * (exponent - 3)))
+    return target
+
 def generate_genesis_block(timestamp, pszTimestamp, pubkey, nBits, nTime=None, nNonce=None):
     if nTime is None:
-        nTime = int(time.time())
+        nTime = int(timestamp)
 
     genesis = {
         "version": 1,
@@ -15,8 +22,10 @@ def generate_genesis_block(timestamp, pszTimestamp, pubkey, nBits, nTime=None, n
         "nonce": nNonce if nNonce is not None else 0,
     }
 
+    target = compact_to_target(nBits)
     genesis_hash = calculate_hash(genesis)
-    while not is_valid_hash(genesis_hash, nBits):
+    
+    while int(genesis_hash, 16) > target:
         genesis["nonce"] += 1
         genesis_hash = calculate_hash(genesis)
 
@@ -33,14 +42,10 @@ def calculate_hash(genesis):
                          genesis["nonce"])
     return hashlib.sha256(hashlib.sha256(header).digest()).hexdigest()
 
-def is_valid_hash(hash_hex, nBits):
-    target = (1 << (256 - nBits)) - 1
-    return int(hash_hex, 16) <= target
-
 if __name__ == "__main__":
-    pszTimestamp = "Hashvive nasceu hoje!"  # Sua mensagem personalizada para o bloco gênesis
-    pubkey = "04ffff001d010445"  # Um exemplo de chave pública
-    nBits = 0x1d00ffff  # Dificuldade inicial (Bitcoin padrão)
+    pszTimestamp = "Hashvive nasceu hoje!"  # Mensagem personalizada
+    pubkey = "04ffff001d010445"  # Exemplo de chave pública
+    nBits = 0x1d00ffff  # Dificuldade inicial padrão do Bitcoin
 
     print("Gerando bloco gênesis...")
     genesis_block = generate_genesis_block(time.time(), pszTimestamp, pubkey, nBits)
