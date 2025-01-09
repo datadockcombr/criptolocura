@@ -3,13 +3,22 @@ import time
 import struct
 
 def compact_to_target(compact):
-    """Converte o valor compactado de dificuldade (nBits) em um target real."""
+    """
+    Converte o valor compactado de dificuldade (nBits) em um target real.
+    """
     exponent = (compact >> 24) & 0xFF
     mantissa = compact & 0xFFFFFF
-    target = mantissa * (1 << (8 * (exponent - 3)))
+
+    if exponent <= 3:
+        target = mantissa >> (8 * (3 - exponent))
+    else:
+        target = mantissa << (8 * (exponent - 3))
     return target
 
 def generate_genesis_block(timestamp, pszTimestamp, pubkey, nBits, nTime=None, nNonce=None):
+    """
+    Gera o bloco gênesis baseado nos parâmetros fornecidos.
+    """
     if nTime is None:
         nTime = int(timestamp)
 
@@ -33,6 +42,9 @@ def generate_genesis_block(timestamp, pszTimestamp, pubkey, nBits, nTime=None, n
     return genesis
 
 def calculate_hash(genesis):
+    """
+    Calcula o hash SHA-256 duplo do cabeçalho do bloco.
+    """
     header = struct.pack("<L32s32sLLL",
                          genesis["version"],
                          bytes.fromhex(genesis["prev_block"]),
@@ -43,7 +55,7 @@ def calculate_hash(genesis):
     return hashlib.sha256(hashlib.sha256(header).digest()).hexdigest()
 
 if __name__ == "__main__":
-    pszTimestamp = "Hashvive nasceu hoje!"  # Mensagem personalizada
+    pszTimestamp = "Hashvive nasceu hoje!"  # Mensagem personalizada para o bloco gênesis
     pubkey = "04ffff001d010445"  # Exemplo de chave pública
     nBits = 0x1d00ffff  # Dificuldade inicial padrão do Bitcoin
 
