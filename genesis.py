@@ -1,6 +1,6 @@
 import hashlib
-import time
 import struct
+import time
 
 def compact_to_target(compact):
     """
@@ -33,7 +33,8 @@ def generate_genesis_block(timestamp, pszTimestamp, pubkey, nBits, nTime=None, n
 
     target = compact_to_target(nBits)
     genesis_hash = calculate_hash(genesis)
-    
+
+    print("Iniciando mineração do bloco gênesis...")
     while int(genesis_hash, 16) > target:
         genesis["nonce"] += 1
         genesis_hash = calculate_hash(genesis)
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     nBits = 0x1d00ffff  # Dificuldade inicial padrão do Bitcoin
 
     print("Gerando bloco gênesis...")
-    genesis_block = generate_genesis_block(time.time(), pszTimestamp, pubkey, nBits)
+    genesis_block = generate_genesis_block(int(time.time()), pszTimestamp, pubkey, nBits)
     print("Bloco gênesis gerado com sucesso!")
     print("Hash:", genesis_block["hash"])
     print("Merkle Root:", genesis_block["merkle_root"])
